@@ -25,6 +25,8 @@ data/puzzles/*
 # Dhat
 dhat-heap.json
 
-# Benchmarks
+# Session cookie
+.session
 
+# Benchmarks
 data/timings.json
