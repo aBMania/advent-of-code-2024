@@ -1,6 +1,9 @@
+use smallvec::SmallVec;
+
 advent_of_code::solution!(2);
 
-fn is_safe_report(report: &Vec<u32>) -> bool {
+#[inline]
+fn is_safe_report(report: &[u32]) -> bool {
     let ascending = report[1] > report[0];
     let mut report_iterator = report.iter();
     let mut prev = *report_iterator.next().unwrap();
@@ -17,7 +20,7 @@ fn is_safe_report(report: &Vec<u32>) -> bool {
 }
 
 pub fn part_one(input: &str) -> Option<u32> {
-    let reports: Vec<Vec<u32>> = input
+    let reports: Vec<SmallVec<[u32; 8]>> = input
         .lines()
         .map(|l| l.split_whitespace().map(|s| s.parse().unwrap()).collect())
         .collect::<_>();
@@ -40,7 +43,7 @@ pub fn is_valid_pairwise(ascending: bool, prev: u32, next: u32) -> bool {
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    let reports: Vec<Vec<u32>> = input
+    let reports: Vec<SmallVec<[u32; 8]>> = input
         .lines()
         .map(|l| l.split_whitespace().map(|s| s.parse().unwrap()).collect())
         .collect::<_>();
@@ -58,7 +61,7 @@ pub fn part_two(input: &str) -> Option<u32> {
                     .enumerate()
                     .filter(|&(i, _)| i != i_skip)
                     .map(|(_, &v)| v)
-                    .collect();
+                    .collect::<SmallVec<[_; 8]>>();
                 if is_safe_report(report_with_skip) {
                     return true;
                 }
