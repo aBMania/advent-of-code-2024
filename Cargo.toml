@@ -28,5 +28,6 @@ pico-args = "0.5.0"
 tinyjson = "2.5.1"
 
 # Solution dependencies
+regex = "1.10.4"
 itertools = "0.13.0"
 smallvec = "1.11.2"
