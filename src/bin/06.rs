@@ -1,7 +1,9 @@
 use crate::Direction::{East, North, South, West};
-use advent_of_code::grid::{input_to_grid, CustomGrid};
+use advent_of_code::grid::CustomGrid;
+use fnv::FnvHashSet;
+use itertools::Itertools;
 use rayon::prelude::*;
-use std::collections::HashSet;
+use std::str::FromStr;
 
 advent_of_code::solution!(6);
 
@@ -13,7 +15,25 @@ pub enum Direction {
     West,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Tile {
+    Empty,
+    Obstacle,
+}
+
+impl FromStr for Tile {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "#" => Ok(Tile::Obstacle),
+            &_ => Ok(Tile::Empty),
+        }
+    }
+}
+
 impl Direction {
+    #[inline]
     pub fn rotate_right(&self) -> Direction {
         match self {
             North => East,
@@ -22,6 +42,7 @@ impl Direction {
             West => North,
         }
     }
+    #[inline]
 
     pub fn apply(&self, (row, col): (usize, usize)) -> Option<(usize, usize)> {
         match (self, row, col) {
@@ -34,8 +55,36 @@ impl Direction {
     }
 }
 
-pub fn visit_map(map: &CustomGrid<char>, mut guard_position: (usize, usize)) -> Option<HashSet<(usize, usize)>> {
-    let mut visited: HashSet<(usize, usize)> = HashSet::with_capacity(map.rows() * map.cols());
+fn parse_input(input: &str) -> (CustomGrid<Tile>, (usize, usize)) {
+    let mut guard_position = (0, 0);
+    let mut cols = 0;
+    let lines = input.lines().map(|line| line.trim());
+
+    let grid_data: Vec<Tile> = lines
+        .enumerate()
+        .flat_map(|(row, line)| {
+            cols = line.len();
+            line.chars().enumerate().map(|(col, c)| {
+                match c {
+                    '#' => Tile::Obstacle,
+                    '.' => Tile::Empty,
+                    '^' => {
+                        guard_position = (row, col);
+                        Tile::Empty
+                    }
+                    _ => unreachable!(),
+                }
+            }).collect_vec()
+        })
+        .collect();
+
+    let map = CustomGrid::from_vec(grid_data, cols);
+
+    (map, guard_position)
+}
+
+fn visit_map(map: &CustomGrid<Tile>, mut guard_position: (usize, usize)) -> Option<FnvHashSet<(usize, usize)>> {
+    let mut visited: FnvHashSet<(usize, usize)> = FnvHashSet::with_capacity_and_hasher(map.rows() * map.cols(), Default::default());
 
     let mut guard_orientation = North;
 
@@ -49,7 +98,7 @@ pub fn visit_map(map: &CustomGrid<char>, mut guard_position: (usize, usize)) -> 
 
         let at_new_guard_position = map.get(new_guard_position.0, new_guard_position.1);
 
-        if let Some('#') = at_new_guard_position {
+        if let Some(Tile::Obstacle) = at_new_guard_position {
             guard_orientation = guard_orientation.rotate_right();
         }
 
@@ -63,17 +112,15 @@ pub fn visit_map(map: &CustomGrid<char>, mut guard_position: (usize, usize)) -> 
 }
 
 pub fn part_one(input: &str) -> Option<u32> {
-    let map: CustomGrid<char> = input_to_grid(input).unwrap();
-
-    let (guard_position, _) = map.indexed_iter().find(|(_, &c)| c == '^').unwrap();
+    let (map, guard_position) = parse_input(input);
 
     let visited = visit_map(&map, guard_position).unwrap();
 
     Some(visited.len() as u32)
 }
 
-pub fn is_loop(map: &CustomGrid<char>, mut guard_position: (usize, usize)) -> bool {
-    let mut visited: HashSet<((usize, usize), Direction)> = HashSet::with_capacity(map.rows() * map.cols());
+fn is_loop(map: &CustomGrid<Tile>, mut guard_position: (usize, usize)) -> bool {
+    let mut visited: FnvHashSet<((usize, usize), Direction)> = FnvHashSet::with_capacity_and_hasher(map.rows() * map.cols(), Default::default());
 
     let mut guard_orientation = North;
 
@@ -81,7 +128,6 @@ pub fn is_loop(map: &CustomGrid<char>, mut guard_position: (usize, usize)) -> bo
         if visited.contains(&(guard_position, guard_orientation)) {
             return true;
         }
-        visited.insert((guard_position, guard_orientation));
 
         let new_guard_position = match guard_orientation.apply(guard_position) {
             None => break,
@@ -89,7 +135,8 @@ pub fn is_loop(map: &CustomGrid<char>, mut guard_position: (usize, usize)) -> bo
         };
         let mut at_new_guard_position = map.get(new_guard_position.0, new_guard_position.1);
 
-        while let Some('#') = at_new_guard_position {
+        while let Some(Tile::Obstacle) = at_new_guard_position {
+            visited.insert((guard_position, guard_orientation));
             guard_orientation = guard_orientation.rotate_right();
             let new_guard_position = match guard_orientation.apply(guard_position) {
                 None => break,
@@ -109,18 +156,18 @@ pub fn is_loop(map: &CustomGrid<char>, mut guard_position: (usize, usize)) -> bo
 
 // 1864 too low
 pub fn part_two(input: &str) -> Option<u32> {
-    let map: CustomGrid<char> = input_to_grid(input).unwrap();
+    let (map, guard_position) = parse_input(input);
 
-    let (guard_position, _) = map.indexed_iter().find(|(_, &c)| c == '^').unwrap();
     let visited = visit_map(&map, guard_position).unwrap();
+
     let solution = visited
         .par_iter()
         .filter(|&&(row, col)| {
-            if *map.get(row, col).unwrap() != '.' {
+            if *map.get(row, col).unwrap() != Tile::Empty {
                 return false;
             }
             let mut map = map.clone();
-            map[(row, col)] = '#';
+            map[(row, col)] = Tile::Obstacle;
             is_loop(&map, guard_position)
         })
         .count();

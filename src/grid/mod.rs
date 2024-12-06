@@ -47,6 +47,11 @@ impl<T: Display> Debug for CustomGrid<T> {
 }
 
 impl<T> CustomGrid<T> {
+
+    pub fn from_vec(vec: Vec<T>, cols: usize) -> CustomGrid<T> {
+        CustomGrid(Grid::from_vec(vec, cols))
+    }
+    
     pub fn iter_neighbors(
         &self,
         row: usize,
