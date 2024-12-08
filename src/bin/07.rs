@@ -32,7 +32,7 @@ fn is_solvable(total: u64, operands: &[u64]) -> bool {
     if operands.iter().product::<u64>() == total {
         return true;
     }
-    
+
     if n == 2 {
         return false;
     }
@@ -62,49 +62,44 @@ pub fn part_one(input: &str) -> Option<u64> {
     Some(solution)
 }
 
-fn is_solvable_part_2(total: u64, acc: u64, operands: &[u64]) -> bool {
-    if acc > total {
-        return false;
+fn is_solvable_part_2(total: u64, operands: &[u64]) -> bool {
+    let n = operands.len();
+    if n == 1 {
+        return total == operands[0];
     }
-    
-    if operands.len() == 0 {
-        return total == acc;
-    }
-    
-    if acc + operands.iter().sum::<u64>() == total {
+
+    if operands.iter().sum::<u64>() == total {
         return true;
     }
-    
-    if acc + operands.iter().product::<u64>() == total {
+
+    if operands.iter().product::<u64>() == total {
         return true;
     }
-    
-    let [op, rest @ ..] = operands else { unreachable!() };
-    if is_solvable_part_2(total, acc + op, rest) {
+
+    if operands[n - 1] < total && is_solvable_part_2(total - operands[n - 1], &operands[0..n - 1]) {
         return true;
     }
-    if is_solvable_part_2(total, acc * op, rest) {
+
+    if total % operands[n - 1] == 0 && is_solvable_part_2(total / operands[n - 1], &operands[0..n - 1]) {
         return true;
     }
-    
-    let concat_value = format!("{}{}", acc, op)
-        .parse::<u64>()
-        .unwrap();
-    
-    if is_solvable_part_2(total, concat_value, rest) {
+
+    let log10 = operands[n - 1].ilog10() + 1;
+    if total % 10u64.pow(log10) == operands[n - 1]
+        && is_solvable_part_2(total / 10u64.pow(log10), &operands[0..n - 1])
+    {
         return true;
     }
 
     false
 }
-
 pub fn part_two(input: &str) -> Option<u64> {
     let input = parse_input(input);
 
     let solution = input
         .into_iter()
         .map(
-            |(total, operands)| match is_solvable_part_2(total, operands[0], &operands[1..operands.len()]) {
+            |(total, operands)| match is_solvable_part_2(total, &operands) {
                 true => total,
                 false => 0,
             },
@@ -127,11 +122,11 @@ mod tests {
         assert_eq!(is_solvable(292, &[11, 6, 16, 20]), true);
         assert_eq!(is_solvable(272, &[11, 6, 16]), true);
     }
-    
+
     #[test]
     fn test_is_solvable_part_2() {
-        assert_eq!(is_solvable_part_2(156, 0, &[15, 6]), true);
-        assert_eq!(is_solvable_part_2(7290, 0,&[6, 8, 6, 15]), true);
+        assert_eq!(is_solvable_part_2(156, &[15, 6]), true);
+        assert_eq!(is_solvable_part_2(7290, &[6, 8, 6, 15]), true);
     }
 
     #[test]
@@ -143,6 +138,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(11387));
     }
 }
