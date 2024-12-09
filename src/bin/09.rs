@@ -108,11 +108,13 @@ pub fn part_two(input: &str) -> Option<u64> {
         .iter()
         .rev()
         .map(|&(mut file_index, file_size, file_id)| {
-            
             // Search for some free space at the right size before the file
-            if let Some((free_space_index, free_space_size)) = frees
+            if let Some((i, (free_space_index, free_space_size))) = frees
                 .iter_mut()
-                .find(|(free_index, free_size)| *free_size >= file_size && *free_index < file_index)
+                .enumerate()
+                .find(|(_, (free_index, free_size))| {
+                    *free_size >= file_size && *free_index < file_index
+                })
             {
                 // Move file to free space
                 file_index = *free_space_index;
@@ -120,6 +122,11 @@ pub fn part_two(input: &str) -> Option<u64> {
                 // Reduce free space
                 *free_space_index += file_size;
                 *free_space_size -= file_size;
+
+                // Remove 0 size free spaces
+                if *free_space_size == 0 {
+                    frees.remove(i);
+                }
             }
 
             // Compute file checksum
