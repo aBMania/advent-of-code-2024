@@ -1,5 +1,14 @@
 advent_of_code::solution!(9);
 
+/// Compute integer sum from a to b (excluded)
+///
+/// # Examples
+///
+///
+/// ```
+/// assert_eq!(sum_from_to(0, 4), 1 + 2 + 3);
+/// assert_eq!(sum_from_to(2, 4), 2 + 3);
+/// ```
 #[inline]
 fn sum_from_to(from: u64, to: u64) -> u64 {
     if from == 0 {
@@ -9,8 +18,15 @@ fn sum_from_to(from: u64, to: u64) -> u64 {
     }
 }
 
-pub fn part_one(input: &str) -> Option<u64> {
-    let (_, mut files, frees) = input
+/// Returns parsed files and free spaces
+///
+///
+/// files: `Vec<index, size, ID>`
+///
+/// free: `Vec<index, size>`
+/// ```
+fn parse_input(input: &str) -> (Vec<(u64, u64, usize)>, Vec<(u64, u64)>) {
+    let (_, files, frees) = input
         .trim()
         .char_indices()
         .map(|(i, c)| (i, c.to_digit(10).unwrap() as u64))
@@ -30,43 +46,51 @@ pub fn part_one(input: &str) -> Option<u64> {
             },
         );
 
-    // println!("{:?}", files);
-    let (mut file_index, mut count, mut file_content) = files.pop().unwrap();
+    (files, frees)
+}
 
+pub fn part_one(input: &str) -> Option<u64> {
+    let (mut files, frees) = parse_input(input);
+
+    // Checksum accumulator
     let mut checksum = 0;
-    'outer: for (mut free_index, space) in frees {
-        let mut blocks_to_move = space;
-        while blocks_to_move > 0 {
+
+    // First file to move, starting from rightmost
+    let (mut file_index, mut file_size_remaining, mut file_id) = files.pop().unwrap();
+
+    'outer: for (mut free_index, free_size) in frees {
+        let mut free_size_remaining = free_size;
+        while free_size_remaining > 0 {
+            // Stop when file index is lower than free index, meaning that there is no free space between files
             if file_index < free_index {
                 break 'outer;
             }
 
-            let moved_blocks = blocks_to_move.min(count);
-            blocks_to_move -= moved_blocks;
-            count -= moved_blocks;
+            // Check how many blocks we can move
+            // The whole file if we can, if we cannot, just move part of the file that fit the free space
+            let moved_blocks = free_size_remaining.min(file_size_remaining);
 
-            // println!("moving {moved_blocks} from {file_content} ({file_index}) zone to {free_index} zone");
-            let moved_file_checksum =
-                (file_content as u64) * sum_from_to(free_index, free_index + moved_blocks);
-            // println!(
-            //     "{file_content} * sum_from_to({free_index}, {free_index} + {moved_blocks})"
-            // );
-            // println!("Adding {moved_file_checksum} to checksum");
-            checksum += moved_file_checksum;
+            // Compute checksum of moved blocks
+            checksum += (file_id as u64) * sum_from_to(free_index, free_index + moved_blocks);
+            
+            // Keep track of how many blocks remains in the free space
+            free_size_remaining -= moved_blocks;
             free_index += moved_blocks;
-            if count == 0 {
-                (file_index, count, file_content) = files.pop().unwrap_or((0, 0, 0));
+
+            // Keep track of how many blocks remains in the file space
+            file_size_remaining -= moved_blocks;
+            
+            // If the whole file has moved, read the next one
+            if file_size_remaining == 0 {
+                (file_index, file_size_remaining, file_id) = files.pop().unwrap_or((0, 0, 0));
             }
         }
     }
 
-    // println!("({file_index}, {count}, {file_content})");
-    // println!(
-    //     "{}",
-    //     (file_content as u64) * sum_from_to(file_index, file_index + count)
-    // );
-    checksum += (file_content as u64) * sum_from_to(file_index, file_index + count);
+    // Add the checksum of the rest of the current file
+    checksum += (file_id as u64) * sum_from_to(file_index, file_index + file_size_remaining);
 
+    // Add the checksum of all the initial files
     checksum += files
         .into_iter()
         .map(|(file_index, count, file_content)| {
@@ -74,13 +98,12 @@ pub fn part_one(input: &str) -> Option<u64> {
         })
         .sum::<u64>();
 
-    // println!("{files:?}");
-    // println!("{checksum:?}");
-
     Some(checksum)
 }
 
 pub fn part_two(input: &str) -> Option<u64> {
+    let (mut files, frees) = parse_input(input);
+
     None
 }
 
@@ -100,7 +123,7 @@ mod tests {
     #[test]
     fn test_part_one() {
         let result = part_one(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(1928));
     }
 
     #[test]
