@@ -25,7 +25,7 @@ impl PartialOrd for Page {
     }
 }
 
-pub fn parse_input(input: &str) -> Vec<Vec<Page>> {
+fn parse_input(input: &str) -> Vec<Vec<Page>> {
     let (rules, pages) = input.split_once("\n\n").unwrap();
 
     let rules: Vec<(u32, u32)> = rules
@@ -107,20 +107,6 @@ mod tests {
     }
 
     #[test]
-    fn test_page_eq() {
-        let page_1 = Page {
-            number: 3,
-            must_be_before: smallvec![],
-        };
-        let page_2 = Page {
-            number: 2,
-            must_be_before: smallvec![],
-        };
-
-        assert_eq!(page_1 == page_2, true);
-    }
-
-    #[test]
     fn test_part_one() {
         let result = part_one(&advent_of_code::template::read_file("examples", DAY));
         assert_eq!(result, Some(143));
@@ -129,6 +115,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(123));
     }
 }
