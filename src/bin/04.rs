@@ -76,9 +76,7 @@ pub fn part_two(input: &str) -> Option<u32> {
                 (Some("SAM"), Some("MAS"))
                 | (Some("MAS"), Some("SAM"))
                 | (Some("MAS"), Some("MAS"))
-                | (Some("SAM"), Some("SAM")) => {
-                    counter += 1
-                },
+                | (Some("SAM"), Some("SAM")) => counter += 1,
                 (_, _) => {}
             }
         }

@@ -64,8 +64,9 @@ fn parse_input(input: &str) -> (CustomGrid<Tile>, (usize, usize)) {
         .enumerate()
         .flat_map(|(row, line)| {
             cols = line.len();
-            line.chars().enumerate().map(|(col, c)| {
-                match c {
+            line.chars()
+                .enumerate()
+                .map(|(col, c)| match c {
                     '#' => Tile::Obstacle,
                     '.' => Tile::Empty,
                     '^' => {
@@ -73,8 +74,8 @@ fn parse_input(input: &str) -> (CustomGrid<Tile>, (usize, usize)) {
                         Tile::Empty
                     }
                     _ => unreachable!(),
-                }
-            }).collect_vec()
+                })
+                .collect_vec()
         })
         .collect();
 
@@ -83,8 +84,12 @@ fn parse_input(input: &str) -> (CustomGrid<Tile>, (usize, usize)) {
     (map, guard_position)
 }
 
-fn visit_map(map: &CustomGrid<Tile>, mut guard_position: (usize, usize)) -> Option<FnvHashSet<(usize, usize)>> {
-    let mut visited: FnvHashSet<(usize, usize)> = FnvHashSet::with_capacity_and_hasher(map.rows() * map.cols(), Default::default());
+fn visit_map(
+    map: &CustomGrid<Tile>,
+    mut guard_position: (usize, usize),
+) -> Option<FnvHashSet<(usize, usize)>> {
+    let mut visited: FnvHashSet<(usize, usize)> =
+        FnvHashSet::with_capacity_and_hasher(map.rows() * map.cols(), Default::default());
 
     let mut guard_orientation = North;
 
@@ -120,7 +125,8 @@ pub fn part_one(input: &str) -> Option<u32> {
 }
 
 fn is_loop(map: &CustomGrid<Tile>, mut guard_position: (usize, usize)) -> bool {
-    let mut visited: FnvHashSet<((usize, usize), Direction)> = FnvHashSet::with_capacity_and_hasher(map.rows() * map.cols(), Default::default());
+    let mut visited: FnvHashSet<((usize, usize), Direction)> =
+        FnvHashSet::with_capacity_and_hasher(map.rows() * map.cols(), Default::default());
 
     let mut guard_orientation = North;
 

@@ -20,13 +20,13 @@ pub fn part_two(input: &str) -> Option<u32> {
             let disable = cap.get(2);
             let mul_left = cap.get(3);
             let mul_right = cap.get(4);
-            
+
             if enable.is_some() {
-                return (acc, true)
+                return (acc, true);
             }
-            
+
             if !enabled || disable.is_some() {
-                return (acc, false)
+                return (acc, false);
             }
 
             let mul_left = mul_left.unwrap().as_str().parse::<u32>().unwrap();

@@ -47,11 +47,10 @@ impl<T: Display> Debug for CustomGrid<T> {
 }
 
 impl<T> CustomGrid<T> {
-
     pub fn from_vec(vec: Vec<T>, cols: usize) -> CustomGrid<T> {
         CustomGrid(Grid::from_vec(vec, cols))
     }
-    
+
     pub fn iter_neighbors(
         &self,
         row: usize,
@@ -78,7 +77,9 @@ impl<T> CustomGrid<T> {
         row: usize,
         col: usize,
     ) -> impl Iterator<Item = ((usize, usize), &T)> {
-        [SOUTH_WEST, WEST, NORTH_WEST, SOUTH, NORTH, SOUTH_EAST, EAST, NORTH_EAST]
+        [
+            SOUTH_WEST, WEST, NORTH_WEST, SOUTH, NORTH, SOUTH_EAST, EAST, NORTH_EAST,
+        ]
         .iter()
         .map(move |(col_offset, row_offset)| {
             ((col as isize + col_offset), (row as isize + row_offset))
@@ -93,7 +94,7 @@ impl<T> CustomGrid<T> {
             }
         })
     }
-    
+
     pub fn right(&self, row: usize, col: usize) -> Option<&T> {
         self.0.get(row, col + 1)
     }

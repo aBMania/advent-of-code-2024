@@ -80,7 +80,9 @@ fn is_solvable_part_2(total: u64, operands: &[u64]) -> bool {
         return true;
     }
 
-    if total % operands[n - 1] == 0 && is_solvable_part_2(total / operands[n - 1], &operands[0..n - 1]) {
+    if total % operands[n - 1] == 0
+        && is_solvable_part_2(total / operands[n - 1], &operands[0..n - 1])
+    {
         return true;
     }
 

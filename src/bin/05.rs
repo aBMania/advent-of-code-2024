@@ -5,9 +5,7 @@ use std::collections::HashMap;
 
 advent_of_code::solution!(5);
 
-#[derive(PartialEq, Eq)]
-#[derive(Debug)]
-#[derive(Ord)]
+#[derive(PartialEq, Eq, Debug, Ord)]
 struct Page {
     number: u32,
     must_be_before: SmallVec<[u32; 10]>,
@@ -50,7 +48,10 @@ fn parse_input(input: &str) -> Vec<Vec<Page>> {
                     let page_number = page.parse().unwrap();
                     Page {
                         number: page_number,
-                        must_be_before: rules_map.get(&page_number).map(|sm| sm.clone()).unwrap_or_default(),
+                        must_be_before: rules_map
+                            .get(&page_number)
+                            .map(|sm| sm.clone())
+                            .unwrap_or_default(),
                     }
                 })
                 .collect()
