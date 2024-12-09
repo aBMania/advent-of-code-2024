@@ -72,14 +72,14 @@ pub fn part_one(input: &str) -> Option<u64> {
 
             // Compute checksum of moved blocks
             checksum += (file_id as u64) * sum_from_to(free_index, free_index + moved_blocks);
-            
+
             // Keep track of how many blocks remains in the free space
             free_size_remaining -= moved_blocks;
             free_index += moved_blocks;
 
             // Keep track of how many blocks remains in the file space
             file_size_remaining -= moved_blocks;
-            
+
             // If the whole file has moved, read the next one
             if file_size_remaining == 0 {
                 (file_index, file_size_remaining, file_id) = files.pop().unwrap_or((0, 0, 0));
@@ -93,8 +93,8 @@ pub fn part_one(input: &str) -> Option<u64> {
     // Add the checksum of all the initial files
     checksum += files
         .into_iter()
-        .map(|(file_index, count, file_content)| {
-            (file_content as u64) * sum_from_to(file_index, file_index + count)
+        .map(|(file_index, file_size, file_id)| {
+            (file_id as u64) * sum_from_to(file_index, file_index + file_size)
         })
         .sum::<u64>();
 
@@ -102,9 +102,32 @@ pub fn part_one(input: &str) -> Option<u64> {
 }
 
 pub fn part_two(input: &str) -> Option<u64> {
-    let (mut files, frees) = parse_input(input);
+    let (files, mut frees) = parse_input(input);
 
-    None
+    let checksum = files
+        .iter()
+        .rev()
+        .map(|&(mut file_index, file_size, file_id)| {
+            
+            // Search for some free space at the right size before the file
+            if let Some((free_space_index, free_space_size)) = frees
+                .iter_mut()
+                .find(|(free_index, free_size)| *free_size >= file_size && *free_index < file_index)
+            {
+                // Move file to free space
+                file_index = *free_space_index;
+
+                // Reduce free space
+                *free_space_index += file_size;
+                *free_space_size -= file_size;
+            }
+
+            // Compute file checksum
+            (file_id as u64) * sum_from_to(file_index, file_index + file_size)
+        })
+        .sum();
+
+    Some(checksum)
 }
 
 #[cfg(test)]
@@ -129,6 +152,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(2858));
     }
 }
