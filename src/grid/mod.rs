@@ -14,6 +14,18 @@ pub const NORTH_EAST: (isize, isize) = (1, 1);
 
 pub struct CustomGrid<T>(Grid<T>);
 
+impl<T: Default> CustomGrid<T> {
+    pub fn from_default((rows, cols): (usize, usize)) -> CustomGrid<T> {
+        let mut vec = Vec::with_capacity(rows * cols);
+        for x in 0..(rows * cols) {
+             vec.push(T::default());
+        }
+        let grid = Grid::from_vec(vec, cols);
+
+        CustomGrid(grid)
+    }
+}
+
 impl<T: Clone> Clone for CustomGrid<T> {
     fn clone(&self) -> Self {
         CustomGrid(Grid::clone(&self.0))
@@ -34,11 +46,11 @@ impl<T> DerefMut for CustomGrid<T> {
     }
 }
 
-impl<T: Display> Debug for CustomGrid<T> {
+impl<T: Debug> Debug for CustomGrid<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         for row in 0..self.0.rows() {
             for col in 0..self.0.cols() {
-                write!(f, "{}", self.0.get(row, col).unwrap())?;
+                write!(f, "{:?}", self.0.get(row, col).unwrap())?;
             }
             writeln!(f)?;
         }
@@ -198,4 +210,16 @@ pub fn input_to_grid<T: FromStr>(input: &str) -> Result<CustomGrid<T>, <T as Fro
         .collect();
 
     Ok(CustomGrid(Grid::from_vec(grid_data?, cols)))
+}
+pub fn input_to_grid_option<T: FromStr>(input: &str) -> CustomGrid<Option<T>> {
+    let lines: Vec<&str> = input.lines().map(|line| line.trim()).collect();
+    let cols = lines[0].len();
+
+    let grid_data: Vec<Option<T>> = lines
+        .into_iter()
+        .flat_map(|line| line.chars())
+        .map(|c| c.to_string().parse::<T>().ok())
+        .collect();
+
+    CustomGrid(Grid::from_vec(grid_data, cols))
 }
