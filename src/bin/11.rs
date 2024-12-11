@@ -1,60 +1,57 @@
-use itertools::Itertools;
+use std::mem;
+use fnv::FnvHashMap;
 
 advent_of_code::solution!(11);
 
-pub fn part_one(input: &str) -> Option<u64> {
-    let mut stones = input.split_whitespace().map(|stone|stone.parse::<u64>().unwrap()).collect_vec();
-    let mut new_stones = vec![];
+fn count_stones_after_n_blinks(input: &str, n: usize) -> u64 {
+    let mut stones = input
+        .split_whitespace()
+        .map(|stone| (stone.parse::<u64>().unwrap(), 1))
+        .collect::<FnvHashMap<u64, u64>>();
 
-    for _ in 0..25 {
+    let mut new_stones: FnvHashMap<u64, u64> = Default::default();
 
-        for stone in stones.iter_mut() {
+    for _ in 0..n {
+        for (stone, n) in stones.iter_mut() {
             if *stone == 0 {
-                *stone = 1;
+                *new_stones.entry(1).or_insert(0) += *n;
+                *n = 0;
                 continue;
             }
             let stone_log_10 = stone.ilog10() + 1;
             if stone_log_10 % 2 == 0 {
                 let corresponding_power_of_ten = 10u64.pow(stone_log_10 / 2);
-                let new_stone = *stone % corresponding_power_of_ten;
-                *stone /= corresponding_power_of_ten;
-                new_stones.push(new_stone);
+                let right_stone = stone % corresponding_power_of_ten;
+                let left_stone = stone / corresponding_power_of_ten;
+
+                *new_stones.entry(right_stone).or_insert(0) += *n;
+                *new_stones.entry(left_stone).or_insert(0) += *n;
+                *n = 0;
                 continue;
             }
 
-            *stone *= 2024;
+            *new_stones.entry(*stone * 2024).or_insert(0) += *n;
+            *n = 0;
         }
 
-        stones.append(&mut new_stones);
-        // println!("{:?}", stones);
+        mem::swap(&mut new_stones, &mut stones);
     }
 
-    Some(stones.len() as u64)
+    stones.values().sum()
+
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
-    None
+pub fn part_one(input: &str) -> Option<u64> {
+    Some(count_stones_after_n_blinks(input, 25))
+}
+
+pub fn part_two(input: &str) -> Option<u64> {
+    Some(count_stones_after_n_blinks(input, 75))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_ilog10() {
-        let stone = 123456u32;
-
-        let stone_log_10 = stone.ilog10() + 1;
-
-        println!("{:?}", stone_log_10);
-        let corresponding_power_of_ten = 10u32.pow(stone_log_10 / 2);
-
-        println!("{:?}", corresponding_power_of_ten);
-        println!("{:?}", stone / corresponding_power_of_ten);
-        println!("{:?}", stone % corresponding_power_of_ten);
-
-        assert_eq!(stone_log_10, 0);
-    }
 
     #[test]
     fn test_part_one() {
@@ -65,6 +62,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(65601038650482));
     }
 }
