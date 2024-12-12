@@ -29,6 +29,7 @@ dependencies = [
  "pico-args",
  "rayon",
  "regex",
+ "rustc-hash",
  "smallvec",
  "tinyjson",
 ]
