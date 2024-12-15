@@ -5,16 +5,16 @@ advent_of_code::solution!(13);
 
 #[derive(Debug)]
 struct Problem {
-    a_x: i32,
-    a_y: i32,
-    b_x: i32,
-    b_y: i32,
-    x: i32,
-    y: i32,
+    a_x: i64,
+    a_y: i64,
+    b_x: i64,
+    b_y: i64,
+    x: i64,
+    y: i64,
 }
 
 impl Problem {
-    fn solve(&self) -> Option<(i32, i32)> {
+    fn solve(&self) -> Option<(i64, i64)> {
         let divisor = self.a_x * self.b_y - self.a_y * self.b_x;
         let dividend = self.a_x * self.y - self.a_y * self.x;
 
@@ -23,11 +23,15 @@ impl Problem {
         }
 
         let b = dividend / divisor;
-        let a = (self.x - self.b_x * b) / self.a_x;
 
-        if a < 0 || b < 0 || a > 100 || b > 100 {
+        let divisor = self.a_x;
+        let dividend = self.x - self.b_x * b;
+
+        if dividend % divisor != 0 {
             return None;
         }
+
+        let a = dividend / divisor;
 
         Some((a, b))
     }
@@ -84,19 +88,32 @@ impl FromStr for Problem {
         })
     }
 }
-pub fn part_one(input: &str) -> Option<i32> {
+pub fn part_one(input: &str) -> Option<i64> {
     let total_cost = input
         .split("\n\n")
         .map(|block| block.parse::<Problem>().unwrap())
         .filter_map(|problem| problem.solve())
+        .filter(|&(a, b)| a <= 100 && b <= 100)
         .map(|(a, b)| a * 3 + b)
         .sum();
 
     Some(total_cost)
 }
 
-pub fn part_two(input: &str) -> Option<i32> {
-    None
+pub fn part_two(input: &str) -> Option<i64> {
+    let total_cost = input
+        .split("\n\n")
+        .map(|block| {
+            let mut problem = block.parse::<Problem>().unwrap();
+            problem.x += 10000000000000;
+            problem.y += 10000000000000;
+            problem
+        })
+        .filter_map(|problem| problem.solve())
+        .map(|(a, b)| a * 3 + b)
+        .sum();
+
+    Some(total_cost)
 }
 
 #[cfg(test)]
