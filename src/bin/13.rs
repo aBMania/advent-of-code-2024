@@ -37,55 +37,34 @@ impl Problem {
     }
 }
 
+impl Problem {
+    const PATTERN: [char; 4] = ['+', ',', '=', '\n'];
+}
+
 #[derive(Debug)]
 struct ParseProblemError;
 impl FromStr for Problem {
     type Err = ParseProblemError;
     fn from_str(problem_str: &str) -> Result<Self, <Self as FromStr>::Err> {
-        let regex = regex::Regex::new(
-            r"Button A: X\+(\d+), Y\+(\d+)\nButton B: X\+(\d+), Y\+(\d+)\nPrize: X=(\d+), Y=(\d+)",
-        )
-        .map_err(|_| ParseProblemError)?;
-        let captures = regex.captures(problem_str).ok_or(ParseProblemError)?;
-
-        Ok(Self {
-            a_x: captures
-                .get(1)
-                .ok_or(ParseProblemError)?
-                .as_str()
-                .parse()
-                .map_err(|_| ParseProblemError)?,
-            a_y: captures
-                .get(2)
-                .ok_or(ParseProblemError)?
-                .as_str()
-                .parse()
-                .map_err(|_| ParseProblemError)?,
-            b_x: captures
-                .get(3)
-                .ok_or(ParseProblemError)?
-                .as_str()
-                .parse()
-                .map_err(|_| ParseProblemError)?,
-            b_y: captures
-                .get(4)
-                .ok_or(ParseProblemError)?
-                .as_str()
-                .parse()
-                .map_err(|_| ParseProblemError)?,
-            x: captures
-                .get(5)
-                .ok_or(ParseProblemError)?
-                .as_str()
-                .parse()
-                .map_err(|_| ParseProblemError)?,
-            y: captures
-                .get(6)
-                .ok_or(ParseProblemError)?
-                .as_str()
-                .parse()
-                .map_err(|_| ParseProblemError)?,
-        })
+        // Thanks to https://github.com/ndunnett/aoc/blob/ea2e0abf0e4a97aed5a2c55976c54e9de6f819e5/rust/2024/src/bin/day13.rs#L17 for parsing
+        if let Some((a_x, a_y, b_x, b_y, x, y)) = problem_str
+            .split(&Self::PATTERN)
+            .skip(1)
+            .step_by(2)
+            .map(|s| s.parse::<i64>().expect("failed to parse number"))
+            .next_tuple()
+        {
+            Ok(Self {
+                a_x,
+                a_y,
+                b_x,
+                b_y,
+                x,
+                y,
+            })
+        } else {
+            Err(ParseProblemError)
+        }
     }
 }
 pub fn part_one(input: &str) -> Option<i64> {
