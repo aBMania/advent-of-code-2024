@@ -1,8 +1,9 @@
+use advent_of_code::grid::CustomGrid;
 use itertools::Itertools;
+use std::collections::HashSet;
 use std::str::FromStr;
 use std::thread::sleep;
 use std::time::Duration;
-use advent_of_code::grid::CustomGrid;
 
 advent_of_code::solution!(14);
 
@@ -86,37 +87,31 @@ pub fn _part_two(input: &str, width: i64, height: i64) -> Option<u32> {
         .map(|s| s.parse::<Robot>().unwrap())
         .collect_vec();
 
-
     for i in (0..10000) {
-        let mut grid = CustomGrid::from_value((WIDTH as usize, HEIGHT as usize), ' ');
-
-        let (top_left, top_right, bottom_left, bottom_right) = robots
+        let iteration_robots = robots
             .iter()
             .map(|robot| robot.position_after_seconds(i))
             .map(|(x, y)| (x.rem_euclid(width), y.rem_euclid(height)))
-            .fold(
-                (0, 0, 0, 0),
-                |(top_left, top_right, bottom_left, bottom_right), (x, y)| match (x, y) {
-                    (x, y) if x > width / 2 && y > height / 2 => {
-                        (top_left, top_right, bottom_left, bottom_right + 1)
-                    }
-                    (x, y) if x < width / 2 && y > height / 2 => {
-                        (top_left, top_right + 1, bottom_left, bottom_right)
-                    }
-                    (x, y) if x > width / 2 && y < height / 2 => {
-                        (top_left, top_right, bottom_left + 1, bottom_right)
-                    }
-                    (_, _) if x < width / 2 && y < height / 2 => {
-                        (top_left + 1, top_right, bottom_left, bottom_right)
-                    }
-                    (_, _) => (top_left, top_right, bottom_left, bottom_right),
-                },
-            );
+            .collect::<HashSet<_>>();
 
-        if top_left == top_right && bottom_right == bottom_left {
-            println!("i: {i}");
-            grid.print();
-            sleep(Duration::from_millis(50));
+        if iteration_robots
+            .iter()
+            .filter(|&&(x, y)| iteration_robots.contains(&(WIDTH - x, y)))
+            .count()
+            > 80
+        {
+            let mut grid = CustomGrid::from_value((WIDTH as usize, HEIGHT as usize), ' ');
+
+            // for &(x, y) in &iteration_robots {
+            //     let robot_square = grid.get_mut(y.rem_euclid(height), x.rem_euclid(width));
+            //     if let Some(robot_square) = robot_square {
+            //         *robot_square = '#';
+            //     };
+            // }
+
+            //             println!("{}", i);
+            //             grid.print();
+            return Some(i as u32);
         }
     }
 
@@ -136,6 +131,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(7861));
     }
 }
