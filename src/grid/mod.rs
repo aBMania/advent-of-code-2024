@@ -17,7 +17,7 @@ pub struct CustomGrid<T>(Grid<T>);
 impl<T: Default> CustomGrid<T> {
     pub fn from_default((rows, cols): (usize, usize)) -> CustomGrid<T> {
         let mut vec = Vec::with_capacity(rows * cols);
-        for x in 0..(rows * cols) {
+        for _ in 0..(rows * cols) {
             vec.push(T::default());
         }
         let grid = Grid::from_vec(vec, cols);
