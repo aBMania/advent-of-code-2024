@@ -16,11 +16,11 @@ pub fn part_one(input: &str) -> Option<u32> {
                 let test: Option<String> = (0isize..4isize)
                     .map(|i| {
                         (
-                            (col as isize + i * col_offset),
                             (row as isize + i * row_offset),
+                            (col as isize + i * col_offset),
                         )
                     })
-                    .map(|(col, row)| {
+                    .map(|(row, col)| {
                         if col.is_negative() || row.is_negative() {
                             None
                         } else {

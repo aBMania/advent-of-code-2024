@@ -3,14 +3,14 @@ use std::fmt::{Debug, Display, Formatter};
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
-pub const SOUTH_WEST: (isize, isize) = (-1, -1);
-pub const WEST: (isize, isize) = (-1, 0);
-pub const NORTH_WEST: (isize, isize) = (-1, 1);
-pub const SOUTH: (isize, isize) = (0, -1);
-pub const NORTH: (isize, isize) = (0, 1);
-pub const SOUTH_EAST: (isize, isize) = (1, -1);
-pub const EAST: (isize, isize) = (1, 0);
-pub const NORTH_EAST: (isize, isize) = (1, 1);
+pub const SOUTH_WEST: (isize, isize) = (1, -1);
+pub const WEST: (isize, isize) = (0, -1);
+pub const NORTH_WEST: (isize, isize) = (-1, -1);
+pub const SOUTH: (isize, isize) = (1, 0);
+pub const NORTH: (isize, isize) = (-1, 0);
+pub const SOUTH_EAST: (isize, isize) = (1, 1);
+pub const EAST: (isize, isize) = (0, 1);
+pub const NORTH_EAST: (isize, isize) = (-1, 1);
 
 pub struct CustomGrid<T>(Grid<T>);
 
@@ -18,7 +18,7 @@ impl<T: Default> CustomGrid<T> {
     pub fn from_default((rows, cols): (usize, usize)) -> CustomGrid<T> {
         let mut vec = Vec::with_capacity(rows * cols);
         for x in 0..(rows * cols) {
-             vec.push(T::default());
+            vec.push(T::default());
         }
         let grid = Grid::from_vec(vec, cols);
 
@@ -70,10 +70,10 @@ impl<T> CustomGrid<T> {
     ) -> impl Iterator<Item = ((usize, usize), &T)> {
         [WEST, SOUTH, NORTH, EAST]
             .iter()
-            .map(move |(col_offset, row_offset)| {
-                ((col as isize + col_offset), (row as isize + row_offset))
+            .map(move |(row_offset, col_offset)| {
+                (row as isize + row_offset, col as isize + col_offset)
             })
-            .filter_map(|(col, row)| {
+            .filter_map(|(row, col)| {
                 if col.is_negative() || row.is_negative() {
                     None
                 } else {
@@ -84,19 +84,20 @@ impl<T> CustomGrid<T> {
             })
     }
 
+    // Clockwise, starting north
     pub fn iter_diagonal_neighbors(
         &self,
         row: usize,
         col: usize,
     ) -> impl Iterator<Item = ((usize, usize), &T)> {
         [
-            SOUTH_WEST, WEST, NORTH_WEST, SOUTH, NORTH, SOUTH_EAST, EAST, NORTH_EAST,
+            NORTH, NORTH_EAST, EAST, SOUTH_EAST, SOUTH, SOUTH_WEST, WEST, NORTH_WEST,
         ]
         .iter()
-        .map(move |(col_offset, row_offset)| {
-            ((col as isize + col_offset), (row as isize + row_offset))
+        .map(move |(row_offset, col_offset)| {
+            ((row as isize + row_offset), (col as isize + col_offset))
         })
-        .filter_map(|(col, row)| {
+        .filter_map(|(row, col)| {
             if col.is_negative() || row.is_negative() {
                 None
             } else {
@@ -119,7 +120,7 @@ impl<T> CustomGrid<T> {
         if col == 0 {
             None
         } else {
-            self.0.get(row, col - 1)
+            self.0.get(row as isize, col - 1)
         }
     }
 
