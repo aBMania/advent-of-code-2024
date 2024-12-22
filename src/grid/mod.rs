@@ -63,6 +63,19 @@ impl<T> CustomGrid<T> {
         CustomGrid(Grid::from_vec(vec, cols))
     }
 
+    pub fn from_value((rows, cols): (usize, usize), value: T) -> CustomGrid<T>
+    where
+        T: Clone,
+    {
+        let mut vec = Vec::with_capacity(rows * cols);
+        for _ in 0..(rows * cols) {
+            vec.push(value.clone());
+        }
+        let grid = Grid::from_vec(vec, cols);
+
+        CustomGrid(grid)
+    }
+
     pub fn iter_neighbors(
         &self,
         row: usize,
@@ -190,10 +203,10 @@ impl<T> CustomGrid<T> {
 }
 
 impl<T: Display> CustomGrid<T> {
-    pub fn print(grid: &CustomGrid<T>) {
-        for row in 0..grid.0.rows() {
-            for col in 0..grid.0.cols() {
-                print!("{}", grid.0.get(row, col).unwrap())
+    pub fn print(&self) {
+        for row in 0..self.0.rows() {
+            for col in 0..self.0.cols() {
+                print!("{}", self.0.get(row, col).unwrap())
             }
             println!()
         }
